@@ -1,0 +1,48 @@
+name: Test Email Only
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-email:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Send a test email
+        env:
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+        run: |
+          python - << 'EOF'
+          import os, smtplib, sys
+          from email.message import EmailMessage
+
+          addr = os.environ.get("EMAIL_ADDRESS")
+          pw = os.environ.get("EMAIL_APP_PASSWORD")
+
+          if not addr:
+              sys.exit("EMAIL_ADDRESS secret is not set.")
+          if not pw:
+              sys.exit("EMAIL_APP_PASSWORD secret is not set.")
+          print(f"Address looks like: {addr[:3]}...@{addr.split('@')[-1]}")
+          print(f"Password length: {len(pw)} characters (should be 16, no spaces)")
+
+          msg = EmailMessage()
+          msg["Subject"] = "Home search - email test"
+          msg["From"] = addr
+          msg["To"] = addr
+          msg.set_content("SMTP works. The weekly report will reach your inbox.")
+
+          try:
+              with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+                  s.login(addr, pw)
+                  s.send_message(msg)
+              print("SUCCESS - check your inbox.")
+          except smtplib.SMTPAuthenticationError as e:
+              sys.exit(f"AUTH FAILED. Bad app password, or 2FA is off. Details: {e}")
+          EOF
