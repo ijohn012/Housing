@@ -1,0 +1,8 @@
+mkdir home-search && cd home-search
+# copy the files from this bundle in
+git init
+git add .
+git commit -m "Initial commit"
+git branch -M main
+git remote add origin https://github.com/YOUR_USERNAME/home-search.git
+git push -u origin main
