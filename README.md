@@ -19,15 +19,27 @@ it, just leave `RENTCAST_API_KEY_2` empty — nothing breaks.
 **Do not paste either key into a chat with me.** They live only in GitHub's
 encrypted secrets.
 
-## 2. Get a Gmail App Password
+## 2. Delivery — email is optional
 
-Regular Gmail passwords won't authenticate over SMTP.
+**You do not need a Gmail App Password.** Every run delivers three ways
+regardless:
 
-1. Two-factor authentication must be on for your Google account first.
-2. Go to **https://myaccount.google.com/apppasswords**.
-3. Name it something like `home-search` and create it.
-4. **Google shows the 16-character code exactly once.** Copy it now — if you
-   close the dialog you have to delete it and make a new one.
+- **A GitHub issue** with the ranked summary table. GitHub emails you when an
+  issue opens in your own repo, so this is your notification with no SMTP
+  credentials involved. Delete or close the issues as you read them.
+- **A run artifact** — the .xlsx, downloadable from the Actions run page for
+  90 days.
+- **A commit to `/reports`** so history accumulates.
+
+If you *do* want the workbook to land in your inbox as an attachment, add a
+Gmail App Password. Two-factor must be on for the Google account first, and
+Workspace admins can disable app passwords entirely — if the option isn't
+there, that's why, and the three delivery paths above cover you.
+
+1. Go to **https://myaccount.google.com/apppasswords**.
+2. Name it something like `home-search` and create it.
+3. **Google shows the 16-character code exactly once.** Copy it immediately —
+   if you close the dialog you have to delete it and make a new one.
 
 ## 3. Create the repo
 
@@ -53,16 +65,20 @@ repository secret**. Add each of these:
 |---|---|
 | `RENTCAST_API_KEY` | your RentCast key |
 | `RENTCAST_API_KEY_2` | second key, or leave blank |
-| `EMAIL_ADDRESS` | your Gmail address |
-| `EMAIL_APP_PASSWORD` | the 16-character app password, no spaces |
+| `EMAIL_ADDRESS` | your Gmail address — **optional**, leave unset to skip email |
+| `EMAIL_APP_PASSWORD` | 16-character app password — **optional** |
 
 ## 5. Test it
 
 Repo → **Actions** → **Weekly Home Search Report** → **Run workflow**.
 
 Watch the log. You want to see listing counts per city, an `AVM calls spent`
-line, and `REQUESTS THIS RUN`. Check your inbox. If the run succeeds but no
-email arrives, the app password is the usual culprit — regenerate it.
+line, and `REQUESTS THIS RUN`. Then check the repo's **Issues** tab — the
+summary should be waiting there, and GitHub should have emailed you about it.
+
+If you set up email and the run succeeds but nothing arrives, the app password
+is the usual culprit — regenerate it. The issue and artifact still land either
+way.
 
 ---
 
@@ -146,4 +162,3 @@ are there for when you learn which subdivisions to chase or avoid.
 | `.github/workflows/weekly-report.yml` | schedule, secrets, commit step |
 | `requirements.txt` | requests, openpyxl |
 | `reports/` | created on first run |
-
