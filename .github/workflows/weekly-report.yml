@@ -1,0 +1,60 @@
+name: Weekly Home Search Report
+
+on:
+  schedule:
+    - cron: "0 7 * * 6"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run report
+        env:
+          RENTCAST_API_KEY: ${{ secrets.RENTCAST_API_KEY }}
+          RENTCAST_API_KEY_2: ${{ secrets.RENTCAST_API_KEY_2 }}
+          EMAIL_ADDRESS: ${{ secrets.EMAIL_ADDRESS }}
+          EMAIL_APP_PASSWORD: ${{ secrets.EMAIL_APP_PASSWORD }}
+          RUN_BIWEEKLY: "false"
+        run: python home_search_report.py
+
+      - name: Upload workbook as a downloadable artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: home-search-report
+          path: reports/*.xlsx
+          retention-days: 90
+
+      - name: Open a GitHub issue with the summary
+        if: always()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ -f reports/latest_summary.md ]; then
+            gh issue create \
+              --title "$(cat reports/latest_subject.txt)" \
+              --body-file reports/latest_summary.md \
+              --repo "$GITHUB_REPOSITORY"
+          fi
+
+      - name: Commit report to history
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add reports/
+          git diff --staged --quiet || git commit -m "Report $(date +%Y-%m-%d)"
+          git push
